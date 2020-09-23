@@ -27,13 +27,14 @@ export default class ReactDragSelectable extends React.PureComponent<
   private initialCursorPos: { x: number; y: number } = { x: 0, y: 0 };
   private newCursorPos: { x: number; y: number } = { x: 0, y: 0 };
   private initialScroll: { x: number; y: number } = { x: 0, y: 0 };
-  private mouseInteraction: boolean = false as boolean;
-  private zoom: number = 1 as number;
   private break = false;
   private handleRef: any = (r: any) => {
     this.selector = r;
   };
   private autoScrollSpeed: number = 1 as number;
+  constructor(props: DragSelectableProps) {
+    super(props)
+  }
 
   componentDidMount(): void {
     const { container } = this.props;
@@ -158,10 +159,6 @@ export default class ReactDragSelectable extends React.PureComponent<
   };
 
   handleClick = (event: MouseEvent) => {
-    if (this.mouseInteraction) {
-      alert("xxx");
-    }
-
     if (this.isRightClick(event)) {
       return;
     }
@@ -342,10 +339,10 @@ export default class ReactDragSelectable extends React.PureComponent<
         // if it’s constrained in an area the area should be substracted calculate
         x:
           (cPos.x - areaRect.left - docScroll.x + this.state.containerLeft) /
-          this.zoom,
+          this.props.scale,
         y:
           (cPos.y - areaRect.top - docScroll.y + this.state.containerTop) /
-          this.zoom
+          this.props.scale
       };
     }
 
@@ -505,11 +502,6 @@ export default class ReactDragSelectable extends React.PureComponent<
 
     this.resetSelector();
 
-    // debounce in order "onClick" to work
-    setTimeout(() => {
-      this.mouseInteraction = false;
-    }, 100);
-
     return null;
   };
 
@@ -525,7 +517,7 @@ export default class ReactDragSelectable extends React.PureComponent<
   }
 
   public getElementsInArea = ({ x, y, w, h, direction }: SelectorPosition) => {
-    const crossingSelect = direction === "RightUp" || direction === "RightDown";
+    const crossingSelect = true
     return this.state.onScreenElements.filter(element => {
       const bound = element.getBoundingClientRect().toJSON();
 
@@ -551,17 +543,17 @@ export default class ReactDragSelectable extends React.PureComponent<
 
         if (crossingSelect) {
           const notInterSect =
-            bound.left > x + w ||
-            bound.right < x ||
-            bound.top > y + h ||
-            bound.bottom < y;
+            bound.left / this.props.scale  > x + w ||
+            bound.right / this.props.scale < x ||
+            bound.top / this.props.scale > y + h ||
+            bound.bottom / this.props.scale < y;
           if (!notInterSect) {
             return element;
           }
         } else if (
-          bound.left > x &&
-          bound.left + bound.width < x + w &&
-          (bound.top > y && bound.top + bound.height < y + h)
+          bound.left / this.props.scale > x &&
+          (bound.left + bound.width) / this.props.scale < x + w &&
+          (bound.top / this.props.scale > y && (bound.top + bound.height) / this.props.scale < y + h)
         ) {
           return element;
         }
@@ -586,7 +578,6 @@ export default class ReactDragSelectable extends React.PureComponent<
             right: 15
           }}
         >
-          {`Selectables: ${this.state.onScreenElements.length}`}
         </div>
       </React.Fragment>
     );

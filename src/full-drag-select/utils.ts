@@ -1,8 +1,8 @@
 // Taken from http://stackoverflow.com/questions/1068834/object-comparison-in-javascript and modified slightly
-export function areObjectsEqual(x, y) {
+export function areObjectsEqual(x: any, y: any) {
   let p;
-  const leftChain = [];
-  const rightChain = [];
+  let leftChain: any[] = [];
+  let rightChain: any[] = [];
 
   // Remember that NaN === NaN returns false
   // and isNaN(undefined) returns true
@@ -96,7 +96,7 @@ export function areObjectsEqual(x, y) {
   return true;
 }
 
-export function areMapsEqual(a, b) {
+export function areMapsEqual(a: any, b: any) {
   if (a.size !== b.size) {
       return false;
   }

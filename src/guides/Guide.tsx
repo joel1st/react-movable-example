@@ -2,7 +2,7 @@ import * as React from "react";
 import { ref, refs, prefixCSS } from "framework-utils";
 import Dragger from "@daybrush/drag";
 import { hasClass, addClass, removeClass } from "@daybrush/utils";
-import styled, { StyledInterface } from "react-css-styled";
+import styled from "react-css-styled";
 
 import Ruler from "../ruler";
 
@@ -109,7 +109,7 @@ export default class Guides
   public adderElement!: HTMLElement;
   public scrollPos = 0;
   public ruler!: Ruler;
-  private manager!: StyledInterface;
+  private manager!: any;
   private guidesElement!: HTMLElement;
   private dragger!: Dragger;
   private guideElements: HTMLElement[] = [];

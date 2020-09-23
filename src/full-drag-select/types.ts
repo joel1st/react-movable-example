@@ -15,6 +15,7 @@ export type SelectorPosition = {
 export type DragSelectableProps = {
   container: Document | HTMLElement | null;
   locked?: boolean;
+  scale: number;
   selectAbleClass: string;
   observerAbleClass: string;
   onSelectChange?: Function;
