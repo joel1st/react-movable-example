@@ -10,12 +10,12 @@
     "@scena/react-ruler": "0.2.1",
     "@types/classnames": "^2.2.10",
     "@types/react": "^16.9.49",
+    "@types/uuid": "^8.3.0",
     "classnames": "2.2.6",
     "framework-utils": "0.3.4",
     "intersection-observer": "0.7.0",
     "keycon": "0.8.0",
     "node-sass": "^4.14.1",
-    "parcel-bundler": "^1.12.4",
     "react": "16.12.0",
     "react-dom": "16.12.0",
     "react-moveable": "0.22.6",
@@ -24,7 +24,8 @@
     "uuid": "3.3.3"
   },
   "devDependencies": {
-    "typescript": "3.3.3"
+    "typescript": "3.3.3",
+    "parcel-bundler": "^1.12.4"
   },
   "scripts": {
     "start": "parcel index.html",

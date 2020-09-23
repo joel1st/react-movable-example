@@ -8,7 +8,6 @@ import { Frame, setAlias } from "scenejs";
 
 import ReactDragSelectable from "../full-drag-select";
 import MoveAble, { OnRotateStart } from "react-moveable";
-import Guides from "../guides";
 import {
   MoveableManagerProps,
   OnDrag,
@@ -25,24 +24,18 @@ import {
   OnRotateGroupStart,
   OnRender,
   OnRenderGroup,
-  OnClick,
   OnClickGroup
 } from "react-moveable";
 
-import { ArtBoardContentType, Targets } from "./type";
+import { Targets } from "./type";
 import BaseElement from "../elements/base-elements";
-import { ElementType } from "../elements/base-elements/type";
 
 import "./style.scss";
 import "../elements/base-elements/style.scss";
 
 setAlias("tx", ["transform", "translateX"]);
 setAlias("ty", ["transform", "translateY"]);
-setAlias("tz", ["transform", "translateZ"]);
 setAlias("rotate", ["transform", "rotate"]);
-setAlias("sx", ["transform", "scaleX"]);
-setAlias("sy", ["transform", "scaleY"]);
-setAlias("matrix3d", ["transform", "matrix3d"]);
 
 type ArtBoardProps = {
   /** Desktop, tablet or mobile view */
@@ -62,16 +55,8 @@ type ArtBoardState = {
   shiftKey?: boolean;
   ctrlKey?: boolean;
   rKey?: boolean;
-  verticalGuidelines?: number[];
-  horizontalGuidelines?: number[];
-  showRuler?: boolean;
   selectables: {
     [id: string]: HTMLElement | SVGAElement | null;
-  };
-  visibleElements?: Array<HTMLElement | SVGAElement>;
-  lastSelectElement: {
-    time?: number;
-    element?: HTMLElement | SVGAElement | undefined | null;
   };
 };
 
@@ -90,23 +75,16 @@ export default class ArtBoard extends React.PureComponent<
       translate: [0, 0, 0],
       rotate: 0
     },
-    showRuler: false,
     selectables: {},
-    lastSelectElement: {
-      time: 0,
-      element: null
-    }
   };
 
   /** MoveAble tooltip */
   private tooltip: HTMLElement | undefined;
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   callback: Function = (selection: any, event: any) => {};
-  private moveable: MoveableManagerProps<any>;
+  private moveable!: MoveableManagerProps<any>;
   private frameMap = new Map();
 
-  private guides1: Guides | null = null;
-  private guides2: Guides | null = null;
   private handleRenderGroup: any = ({ targets }: OnRenderGroup) => {
     targets.forEach(target => this.handleRender({ target }));
   };
@@ -119,8 +97,6 @@ export default class ArtBoard extends React.PureComponent<
         translateX: "0px",
         translateY: "0px",
         rotate: "0deg",
-        scaleX: 1,
-        scaleY: 1
       }
     });
 
@@ -134,19 +110,9 @@ export default class ArtBoard extends React.PureComponent<
   };
 
   private handleRender: any = ({ target }: OnRender) => {
-    // const {frame} = this.state;
-    // target.style.transform = `translate(${frame.translate[0]}px, ${
-    //     frame.translate[1]
-    // }px) rotate(${frame.rotate}deg)`;
-
     target.style.cssText += this.getFrame(target as
       | HTMLElement
       | SVGAElement).toCSS();
-  };
-
-  private dragSelector: any;
-  private handleDragSelectRef: any = (r: any) => {
-    this.dragSelector = r;
   };
 
   private handleChildMounted: any = (
@@ -168,25 +134,9 @@ export default class ArtBoard extends React.PureComponent<
     id: string,
     element: HTMLElement | SVGAElement | null
   ) => {};
-  private handleVisibleElementsChange: any = (
-    visibleElements: Array<HTMLElement | SVGAElement>
-  ) => {
-    this.setState({ visibleElements });
-  };
 
   componentDidMount(): void {
     this.tooltip = this.createTooltip();
-
-    // setup guides
-    window.addEventListener("resize", () => {
-      if (this.guides1) {
-        this.guides1.resize();
-      }
-
-      if (this.guides2) {
-        this.guides2.resize();
-      }
-    });
 
     const keycon = new KeyController(window);
     keycon.keydown(["ctrl", "a"], event => {
@@ -229,12 +179,6 @@ export default class ArtBoard extends React.PureComponent<
     newTarget?: HTMLElement | SVGAElement | undefined | null,
     event?: MouseEvent
   ) => {
-    this.setState({
-      lastSelectElement: {
-        time: new Date().getTime(),
-        element: newTarget
-      }
-    });
     let nextState: Targets = this.state.target || [];
     if (newTarget) {
       const index = nextState.indexOf(newTarget);
@@ -307,12 +251,6 @@ export default class ArtBoard extends React.PureComponent<
     this.onTargetChange(nextTargets, () => {
       this.moveable.updateRect();
     });
-
-    // this.setState({
-    //     target: nextTargets,
-    // }, () => {
-    //     this.moveable.updateRect();
-    // });
   };
   private handleDragGroupStart: any = ({ events }: OnDragGroupStart) => {
     this.lockSelector();
@@ -328,6 +266,7 @@ export default class ArtBoard extends React.PureComponent<
     clientX,
     clientY
   }: OnDragGroupEnd) => {
+    console.log('yooo')
     this.unLockSelector();
     this.hideTooltip();
   };
@@ -431,6 +370,7 @@ export default class ArtBoard extends React.PureComponent<
 
   private handleDragEnd: any = () => {
     this.unLockSelector();
+    console.log('yoooo')
     this.hideTooltip();
   };
 
@@ -553,7 +493,7 @@ export default class ArtBoard extends React.PureComponent<
   };
 
   renderMoveable = () => {
-    const { horizontalGuidelines, verticalGuidelines } = this.state;
+    const elems = Object.keys(this.state.selectables).map((key) => this.state.selectables[key]).filter((e) => e) as HTMLElement[]
 
     return (
       <MoveAble
@@ -578,9 +518,7 @@ export default class ArtBoard extends React.PureComponent<
         throttleRotate={this.state.shiftKey ? 30 : 0}
         onRender={this.handleRender}
         onRenderGroup={this.handleRenderGroup}
-        elementGuidelines={this.state.visibleElements}
-        verticalGuidelines={verticalGuidelines}
-        horizontalGuidelines={horizontalGuidelines}
+        elementGuidelines={elems}
         onDragStart={this.handleDragStart}
         onDrag={this.handleDrag}
         onDragEnd={this.handleDragEnd}
@@ -602,42 +540,6 @@ export default class ArtBoard extends React.PureComponent<
         onRotateGroup={this.handleRotateGroup}
         onRotateGroupEnd={this.handleRotateGroupEnd}
       />
-    );
-  };
-
-  renderGuides = () => {
-    return (
-      <React.Fragment>
-        <div className="box" />
-        <div className={classNames("ruler", "horizontal")}>
-          <Guides
-            ref={ref(this, "guides1")}
-            type="horizontal"
-            rulerStyle={{
-              left: "20px",
-              width: "calc(100% - 20px)",
-              height: "100%"
-            }}
-            setGuides={guides => {
-              this.setState({ horizontalGuidelines: guides.map(g => g + 20) });
-            }}
-          />
-        </div>
-        <div className={classNames("ruler", "vertical")}>
-          <Guides
-            ref={ref(this, "guides2")}
-            type="vertical"
-            rulerStyle={{
-              top: "0",
-              height: "100%",
-              width: "100%"
-            }}
-            setGuides={guides => {
-              this.setState({ verticalGuidelines: guides.map(g => g + 20) });
-            }}
-          />
-        </div>
-      </React.Fragment>
     );
   };
 
@@ -679,31 +581,25 @@ export default class ArtBoard extends React.PureComponent<
   };
 
   render() {
-    const { showRuler } = this.state;
     return (
       <React.Fragment>
         <div
           ref={this.handleArtBoardRef}
           className={classNames("art_board_wrapper", {
             art_board__loading: false,
-            show__ruler: showRuler
           })}
         >
           {this.renderContent()}
           {this.renderMoveable()}
         </div>
-        {showRuler && this.renderGuides()}
         <ReactDragSelectable
-          ref={this.handleDragSelectRef}
           scale={this.props.scale}
           container={this.artBoard}
           observerAbleClass="element__wrapper"
-          selectAbleClass="element__selectable"
           onSelectChange={this.handleSelectChange}
           onMultipleSelectChange={this.handleMultipleSelectChange}
           locked={this.state.hasElementResizing}
           selectables={this.state.selectables}
-          onVisibleElementsChange={this.handleVisibleElementsChange}
         />
       </React.Fragment>
     );

@@ -9,7 +9,6 @@ import {
   DragSelectableProps,
   DragSelectableState
 } from "./types";
-import { areObjectsEqual } from "./utils";
 
 export default class ReactDragSelectable extends React.PureComponent<
   DragSelectableProps,
@@ -18,14 +17,10 @@ export default class ReactDragSelectable extends React.PureComponent<
   state: DragSelectableState = {
     containerTop: 0,
     containerLeft: 0,
-    onScreenElements: [],
-    observerIdsCache: []
   };
 
   private selector: HTMLElement | null = null;
-  private previousCursorPos: { x: number; y: number } = { x: 0, y: 0 };
   private initialCursorPos: { x: number; y: number } = { x: 0, y: 0 };
-  private newCursorPos: { x: number; y: number } = { x: 0, y: 0 };
   private initialScroll: { x: number; y: number } = { x: 0, y: 0 };
   private break = false;
   private handleRef: any = (r: any) => {
@@ -61,73 +56,12 @@ export default class ReactDragSelectable extends React.PureComponent<
         });
       }
     }
-
-    if (!areObjectsEqual(nextProps.selectables, this.props.selectables)) {
-      Object.keys(nextProps.selectables).forEach(id => {
-        const element = nextProps.selectables[id];
-        if (this.state.observerIdsCache.indexOf(id) === -1 && element) {
-          this.setState(
-            {
-              observerIdsCache: [...this.state.observerIdsCache, id]
-            },
-            () => {
-              this.observer.observe(element);
-            }
-          );
-        }
-      });
-    }
   }
-
-  private observer = new IntersectionObserver(entries => {
-    console.log("called observer");
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("element__selectable");
-        if (
-          this.state.onScreenElements.indexOf(entry.target as
-            | HTMLElement
-            | SVGAElement) === -1
-        ) {
-          this.setState(
-            {
-              onScreenElements: this.state.onScreenElements.concat(
-                entry.target as HTMLElement | SVGAElement
-              ) // [...this.state.onScreenElements, entry.target as HTMLElement | SVGAElement],
-            },
-            () => {
-              if (typeof this.props.onVisibleElementsChange === "function") {
-                this.props.onVisibleElementsChange(this.state.onScreenElements);
-              }
-            }
-          );
-        }
-      } else {
-        entry.target.classList.remove("element__selectable");
-        this.setState(
-          {
-            onScreenElements: this.state.onScreenElements.filter(
-              e => e !== entry.target
-            )
-          },
-          () => {
-            if (typeof this.props.onVisibleElementsChange === "function") {
-              this.props.onVisibleElementsChange(this.state.onScreenElements);
-            }
-          }
-        );
-      }
-    });
-  });
 
   componentWillUnmount(): void {
     const { container } = this.props;
     if (container) {
       container.removeEventListener("mousedown", this.handleMouseDown);
-    }
-
-    if (this.observer) {
-      this.observer.disconnect();
     }
   }
 
@@ -163,12 +97,12 @@ export default class ReactDragSelectable extends React.PureComponent<
       return;
     }
 
-    const { selectAbleClass, onSelectChange } = this.props;
+    const { onSelectChange } = this.props;
 
     const target = event.target as HTMLElement | SVGAElement;
     if (typeof onSelectChange === "function") {
       const newTarget =
-        target && target.classList.contains(selectAbleClass) ? target : null;
+        target && target.classList.contains(this.props.observerAbleClass) ? target : null;
       onSelectChange(newTarget, event);
     }
   };
@@ -232,9 +166,6 @@ export default class ReactDragSelectable extends React.PureComponent<
     const cursorPosNew = this._getCursorPos(event, this.props.container);
     const scrollNew = this.getScroll(this.props.container);
 
-    // save for later retrieval
-    this.newCursorPos = cursorPosNew;
-
     // if area or document is scrolled those values have to be included aswell
     const scrollAmount = {
       x: scrollNew.x - this.initialScroll.x,
@@ -280,7 +211,6 @@ export default class ReactDragSelectable extends React.PureComponent<
       this.props.container,
       true
     );
-    this.newCursorPos = this.initialCursorPos;
     this.initialScroll = this.getScroll(this.props.container);
 
     const selectorPos: SelectorPosition = {
@@ -490,7 +420,6 @@ export default class ReactDragSelectable extends React.PureComponent<
   reset = (event: MouseEvent, withCallback: boolean) => {
     /*eslint-disable no-underscore-dangle*/
     if (this.props.container) {
-      this.previousCursorPos = this._getCursorPos(event, this.props.container);
       this.props.container.removeEventListener("mouseup", this._end);
       this.props.container.removeEventListener("mousemove", this._handleMove);
       this.props.container.addEventListener("mousedown", this._startUp);
@@ -518,8 +447,9 @@ export default class ReactDragSelectable extends React.PureComponent<
 
   public getElementsInArea = ({ x, y, w, h, direction }: SelectorPosition) => {
     const crossingSelect = true
-    return this.state.onScreenElements.filter(element => {
-      const bound = element.getBoundingClientRect().toJSON();
+    const elems = Object.keys(this.props.selectables).map((key) => this.props.selectables[key]).filter((e) => e)
+    return elems.filter(element => {
+      const bound = element!.getBoundingClientRect().toJSON();
 
       const scrollLeft =
         window.pageXOffset || document.documentElement.scrollLeft;

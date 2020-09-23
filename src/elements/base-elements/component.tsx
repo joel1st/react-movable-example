@@ -35,7 +35,7 @@ export default class BaseElement extends React.PureComponent<
     isSelected: false
   };
 
-  private id: string = uuid();
+  private id: string = uuid.v4();
 
   componentDidMount(): void {
     if (typeof this.props.onMounted === "function") {

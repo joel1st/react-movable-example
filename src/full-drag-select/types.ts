@@ -16,7 +16,6 @@ export type DragSelectableProps = {
   container: Document | HTMLElement | null;
   locked?: boolean;
   scale: number;
-  selectAbleClass: string;
   observerAbleClass: string;
   onSelectChange?: Function;
   onMultipleSelectChange?: Function;
@@ -29,6 +28,4 @@ export type DragSelectableProps = {
 export type DragSelectableState = {
   containerTop: number;
   containerLeft: number;
-  onScreenElements: Array<HTMLElement | SVGAElement>;
-  observerIdsCache: Array<string>;
 };
